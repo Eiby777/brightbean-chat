@@ -68,9 +68,20 @@ you own.
 | <img src=".github/assets/icons/building-2.svg" width="18" height="18" alt=""> **Multi-tenancy** | Organizations, workspaces, invitations, two-tier RBAC, and enforced tenant isolation. Cross-tenant object access answers 404. |
 | <img src=".github/assets/icons/shield-check.svg" width="18" height="18" alt=""> **Secure by default** | Encrypted credentials at rest, SSRF protection for user-supplied URLs, CSP nonces, webhook signature checks, opt-out enforcement, and production settings that reject placeholder secrets. |
 
-Put together: a comment on your Instagram post opens a DM, a flow asks a few
-questions and tags the lead, a sequence follows up over the next week, and a
-teammate can step in from the inbox whenever someone needs a human.
+<p align="center">
+  <img src=".github/assets/screenshots/flow-builder.webp" width="100%" alt="Flow builder editing a Telegram welcome and FAQ flow">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src=".github/assets/screenshots/broadcast-audience.webp" width="100%" alt="Broadcast wizard choosing an audience, with compliance checks"></td>
+    <td width="50%"><img src=".github/assets/screenshots/inbox.webp" width="100%" alt="Shared inbox showing a Telegram conversation run by a flow"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src=".github/assets/screenshots/channels.webp" width="100%" alt="Channel settings listing every channel available to connect"></td>
+    <td width="50%"><img src=".github/assets/screenshots/api-keys.webp" width="100%" alt="Developer settings listing public API keys"></td>
+  </tr>
+</table>
 
 ## Supported channels
 
