@@ -262,7 +262,7 @@ channel in the product, and none of it is this project's choice.
 | Automation, outside 24 hours | **Blocked** |
 | An agent reply from the inbox, within **7 days** of last inbound | Sends, tagged `HUMAN_AGENT` |
 | An agent reply, beyond 7 days | **Blocked** |
-| Broadcasts | **Never** — Instagram does not appear in the broadcast composer at all |
+| Broadcasts | Allowed, but **only to the open-window audience** — everyone past 24 hours is skipped with `outside_window` and counted |
 | A contact who has never messaged the account | **Blocked**, except a private reply to their comment |
 
 The human-agent allowance is available to inbox sends only, hard-coded (SPEC
@@ -362,7 +362,12 @@ screencast. This is a Meta process; nothing in this product changes it.
 
 ## Out of scope in v1
 
-- **Broadcasts.** Instagram never appears in the composer (SPEC §13.2).
+- **Reaching a closed window.** Instagram broadcasts themselves are in scope —
+  Instagram appears in the composer and sends to whoever is inside the 24-hour
+  window — but nothing here reopens a closed one. Meta offers no tag or template
+  for it; `HUMAN_AGENT` is inbox-only and promotional use of it violates policy.
+  The composer says so in a sentence on the audience and review steps rather
+  than letting the skip counts explain themselves (SPEC §13.2).
 - **Facebook-Login-based Instagram.** This product uses Instagram Login only;
   the Page-linked variant is a different API surface with different permissions.
 - **Liking comments**, for the reason above.

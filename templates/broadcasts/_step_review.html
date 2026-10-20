@@ -26,6 +26,15 @@ step, rather than sent.
     </p>
 
     {% comment %}
+      Repeated from the audience step on purpose: this is the step with the
+      button on it, and "most of your audience is out of the window" is the one
+      thing an operator must not read for the first time afterwards.
+    {% endcomment %}
+    {% if composer.window_notice %}
+    <p class="wizard-hint mb-4" role="note">{{ composer.window_notice }}</p>
+    {% endif %}
+
+    {% comment %}
       The same counts the audience step previewed, recomputed now — minutes can
       separate the two, and the number someone agrees to should be today's.
     {% endcomment %}

@@ -331,6 +331,12 @@ def _wizard_context(request: WorkspaceRequest, broadcast: Broadcast, step: str, 
         preview = audience_module.preview(broadcast) if broadcast.target_filter_json else None
         context["preview"] = preview
         context["reasons"] = _reasons(preview.skipped, preview.samples) if preview else []
+        # And the sentence that explains the skip count, by the same argument:
+        # the fragment reads it as a top-level key, so without it here the
+        # notice is missing from the one paint where somebody meets the numbers
+        # for the first time, and appears a beat later when the filter bar
+        # refetches the preview endpoint.
+        context["window_notice"] = _window_notice(broadcast)
     if step == "content":
         context["config"] = services.node_config(_graph_of(broadcast))
     context.update(extra)
@@ -509,7 +515,11 @@ def audience_preview(request: WorkspaceRequest, workspace_id: str, broadcast_id:
     try:
         document, segment = _audience_from(request, params=request.GET)
     except ConditionError as exc:
-        return render(request, "broadcasts/_audience_preview.html", {"error": str(exc)})
+        return render(
+            request,
+            "broadcasts/_audience_preview.html",
+            {"error": str(exc), "window_notice": _window_notice(broadcast)},
+        )
 
     if not document:
         # No rules yet — which is what the page loads with, and what the filter
@@ -519,7 +529,11 @@ def audience_preview(request: WorkspaceRequest, workspace_id: str, broadcast_id:
         # count. ``{"match": "all", "rules": []}`` is a different thing entirely
         # and does reach the engine: it targets everyone, deliberately, which is
         # exactly why this preview exists.
-        return render(request, "broadcasts/_audience_preview.html", {"preview": None})
+        return render(
+            request,
+            "broadcasts/_audience_preview.html",
+            {"preview": None, "window_notice": _window_notice(broadcast)},
+        )
 
     # A throwaway instance so the preview is computed against the filter on
     # screen rather than the one on disk. Never saved — assigning to an unsaved
@@ -535,8 +549,21 @@ def audience_preview(request: WorkspaceRequest, workspace_id: str, broadcast_id:
     return render(
         request,
         "broadcasts/_audience_preview.html",
-        {"preview": preview, "reasons": _reasons(preview.skipped, preview.samples), "segment": segment},
+        {
+            "preview": preview,
+            "reasons": _reasons(preview.skipped, preview.samples),
+            "segment": segment,
+            # The fragment is rendered by this endpoint and by _wizard_context,
+            # and the notice has to survive both or it would blink out of the
+            # page on the first keystroke in the filter bar.
+            "window_notice": _window_notice(broadcast),
+        },
     )
+
+
+def _window_notice(broadcast: Broadcast) -> str:
+    """composer.window_notice for this broadcast's connection, or ``""``."""
+    return composer_module.window_notice(broadcast.channel_connection)
 
 
 # ---------------------------------------------------------------------------
@@ -754,9 +781,9 @@ def _connection(request: WorkspaceRequest, connection_id: Any) -> ChannelConnect
 
     404 rather than a validation error for a platform that forbids broadcasts:
     it was never offered by the selector, so a request naming it is not a form
-    an operator could have submitted — and SPEC §13.2's "Instagram never appears
-    in the broadcast channel selector" is only true if the endpoint agrees with
-    the selector.
+    an operator could have submitted — and SPEC §13.2's selector rule is only
+    true if the endpoint agrees with the selector. No shipped platform forbids
+    them today; the check stays because the flag does.
     """
     connection = get_scoped_object_or_404(ChannelConnection, request.workspace, pk=connection_id or "")
     if connection not in composer_module.broadcastable_connections(request.workspace):
