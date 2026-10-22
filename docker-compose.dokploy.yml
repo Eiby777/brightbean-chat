@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-brightbean_chat}
+      POSTGRES_USER: ${POSTGRES_USER:-brightbean}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brightbean"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+
+  migrate:
+    build: .
+    command: python manage.py migrate
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgres://brightbean:***@postgres:5432/brightbean_chat
+      SECRET_KEY: ${SECRET_KEY:?SET_SECRET_KEY}
+      ENCRYPTION_KEY_SALT: ${ENCRYPTION_KEY_SALT:?SET_KEY_SALT}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-chat.toolsy.lat}
+      APP_URL: https://chat.toolsy.lat
+      TRUSTED_PROXIES: 172.16.0.0/12,10.0.0.0/8
+      DJANGO_ENV_FILE: /nonexistent
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build: .
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgres://brightbean:***@postgres:5432/brightbean_chat
+      SECRET_KEY: ${SECRET_KEY:?SET_SECRET_KEY}
+      ENCRYPTION_KEY_SALT: ${ENCRYPTION_KEY_SALT:?SET_KEY_SALT}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-chat.toolsy.lat}
+      APP_URL: https://chat.toolsy.lat
+      TRUSTED_PROXIES: 172.16.0.0/12,10.0.0.0/8
+      DJANGO_ENV_FILE: /nonexistent
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  worker:
+    build: .
+    command: python manage.py rqworker default
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgres://brightbean:***@postgres:5432/brightbean_chat
+      SECRET_KEY: ${SECRET_KEY:?SET_SECRET_KEY}
+      ENCRYPTION_KEY_SALT: ${ENCRYPTION_KEY_SALT:?SET_KEY_SALT}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-chat.toolsy.lat}
+      APP_URL: https://chat.toolsy.lat
+      TRUSTED_PROXIES: 172.16.0.0/12,10.0.0.0/8
+      DJANGO_ENV_FILE: /nonexistent
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
